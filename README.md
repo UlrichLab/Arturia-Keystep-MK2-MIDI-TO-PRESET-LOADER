@@ -57,9 +57,16 @@ file-based workflow with MCC as the go-between.
 
 ## Status
 
-Reverse engineering not yet started — no test exports collected. Next
-concrete step: build the test patterns in `docs/test-patterns.md` on the
-device and export them into `samples/`.
+Real progress: a genuine export (`samples/MyArturiaChords.keystep2`) turned
+out to be a JSON-like text container, not an opaque binary blob — see
+`docs/findings.md`. Confirmed: the container structure, the 64 per-(bank,
+slot) 4096-byte pattern blobs (4 banks x 16 slots, matching the hardware
+exactly), the "empty slot = 4096x 0xFF" convention, and a repeating 36-byte
+per-step record inside each blob. Still open: exact meaning of a few bytes
+per step record (note vs. velocity ambiguity), and where pattern
+length/tempo are actually stored. Next concrete step: a few more
+single-variable test exports (see the bottom of `docs/findings.md`) to
+resolve those.
 
 ## Tools
 
