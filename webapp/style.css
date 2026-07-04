@@ -1,0 +1,97 @@
+:root {
+  color-scheme: light dark;
+  --bg: #1b1c1e;
+  --fg: #e8e8e8;
+  --muted: #9a9a9a;
+  --accent: #5aa9ff;
+  --empty: #333538;
+  --has-data: #3a5a3a;
+  --pending: #5a4a1f;
+  --warn: #e0a030;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+header h1 { margin-bottom: 0.25rem; }
+.subtitle { color: var(--muted); margin: 0.25rem 0; }
+.subtitle.warn { color: var(--warn); }
+
+.dropzone {
+  border: 2px dashed var(--muted);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  margin: 1rem 0;
+}
+.dropzone.drag-over { border-color: var(--accent); background: rgba(90, 169, 255, 0.08); }
+
+#bank-tabs { display: flex; gap: 0.5rem; margin: 1rem 0; }
+.bank-tab {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--muted);
+  background: transparent;
+  color: var(--fg);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.bank-tab.active { border-color: var(--accent); color: var(--accent); }
+
+#grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.pad {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.pad-empty { background: var(--empty); }
+.pad-has-data { background: var(--has-data); }
+.pad-pending { background: var(--pending); }
+.pad.drag-over { outline: 2px solid var(--accent); }
+
+.pad-title { font-weight: 600; }
+.pad-info { font-size: 0.7rem; color: var(--muted); white-space: pre-line; }
+
+#controls { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+#controls button {
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #10131a;
+  font-weight: 600;
+  cursor: pointer;
+}
+#controls button:disabled { background: var(--muted); cursor: not-allowed; }
+
+#log { max-height: 260px; overflow-y: auto; font-family: monospace; font-size: 0.8rem; }
+.log-line { padding: 0.15rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.log-line.warn { color: var(--warn); }
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f5f7;
+    --fg: #1b1c1e;
+    --muted: #666;
+    --empty: #e4e4e6;
+    --has-data: #cdeccd;
+    --pending: #f5e2b8;
+  }
+  #controls button { color: #fff; }
+}

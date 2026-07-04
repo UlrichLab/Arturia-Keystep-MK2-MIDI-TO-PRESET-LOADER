@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>KeyStep mk2 — MIDI to Preset Loader</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>KeyStep mk2 — MIDI to Preset Loader</h1>
+  <p class="subtitle">
+    MIDI-Datei per Drag &amp; Drop auf einen Bank/Preset-Slot ziehen, dann eine
+    angepasste <code>.keystep2</code>-Datei herunterladen und über MIDI Control
+    Center auf das Gerät schreiben — kein manuelles Aufnehmen am KeyStep nötig.
+  </p>
+  <p class="subtitle warn">
+    Experimentell: das Dateiformat ist teilweise reverse-engineered (siehe
+    <code>docs/findings.md</code>). Erzeugte Dateien vor dem Store-To immer in
+    MIDI Control Center gegenprüfen.
+  </p>
+</header>
+
+<section id="base-section">
+  <div id="base-drop" class="dropzone">
+    <p>Deine exportierte <code>.keystep2</code>-Basisdatei hierher ziehen (oder klicken)</p>
+    <input type="file" id="base-input" accept=".keystep2" hidden>
+  </div>
+</section>
+
+<section id="bank-tabs"></section>
+
+<section id="grid-section">
+  <div id="grid"></div>
+</section>
+
+<section id="controls">
+  <label>
+    Quantisierungs-Raster:
+    <select id="resolution">
+      <option value="1">1/4</option>
+      <option value="2">1/8</option>
+      <option value="4" selected>1/16</option>
+      <option value="8">1/32</option>
+    </select>
+  </label>
+  <button id="download-btn" disabled>Angepasste .keystep2 herunterladen</button>
+</section>
+
+<section id="log-section">
+  <h2>Log</h2>
+  <div id="log"></div>
+</section>
+
+<script src="midi.js"></script>
+<script src="keystep2.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
