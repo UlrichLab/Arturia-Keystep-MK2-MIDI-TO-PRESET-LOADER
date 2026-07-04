@@ -19,6 +19,42 @@ function log(message, isWarning) {
   els.log.prepend(p);
 }
 
+// Candidate grid resolutions, expressed as steps-per-quarter-note-beat,
+// finest first. Below 1 they cover more than one beat per step (useful for
+// long MIDI files that need a coarse grid to fit in 64 steps at all).
+const AUTO_RESOLUTION_CANDIDATES = [8, 4, 2, 1, 0.5, 0.25, 0.125, 0.0625];
+
+function resolutionLabel(stepsPerBeat) {
+  const wholeNoteFraction = 4 * stepsPerBeat; // e.g. stepsPerBeat=4 -> 1/16 note per step
+  if (wholeNoteFraction >= 1) return `1/${wholeNoteFraction}`;
+  return `${Math.round(1 / wholeNoteFraction)} ganze Noten pro Step`;
+}
+
+function stepsNeededAt(midi, stepsPerBeat) {
+  const stepTicks = midi.ticksPerBeat / stepsPerBeat;
+  let maxStepIndex = -1;
+  for (const note of midi.notes) {
+    const stepIndex = Math.round(note.startTick / stepTicks);
+    if (stepIndex > maxStepIndex) maxStepIndex = stepIndex;
+  }
+  return maxStepIndex + 1;
+}
+
+// Picks the finest resolution from AUTO_RESOLUTION_CANDIDATES whose full
+// note range still fits within MAX_HARDWARE_STEPS. Falls back to the
+// coarsest candidate (and lets the caller truncate) if even that isn't
+// enough for an extremely long file.
+function pickAutoResolution(midi) {
+  let chosen = AUTO_RESOLUTION_CANDIDATES[AUTO_RESOLUTION_CANDIDATES.length - 1];
+  for (const candidate of AUTO_RESOLUTION_CANDIDATES) {
+    if (stepsNeededAt(midi, candidate) <= MAX_HARDWARE_STEPS) {
+      chosen = candidate;
+      break;
+    }
+  }
+  return chosen;
+}
+
 function quantizeMidiToSteps(midi, stepsPerBeat) {
   const stepTicks = midi.ticksPerBeat / stepsPerBeat;
   const stepMap = new Map(); // stepIndex -> [{pitch, velocity}]
@@ -36,8 +72,9 @@ function quantizeMidiToSteps(midi, stepsPerBeat) {
   let totalLength = maxStepIndex + 1;
   if (totalLength > MAX_HARDWARE_STEPS) {
     warnings.push(
-      `MIDI-Datei braucht ${totalLength} Steps bei dieser Auflösung, Hardware-Limit ist ${MAX_HARDWARE_STEPS}. ` +
-      `Wird auf ${MAX_HARDWARE_STEPS} Steps gekürzt.`
+      `MIDI-Datei braucht selbst im gröbsten Raster noch ${totalLength} Steps, Hardware-Limit ist ` +
+      `${MAX_HARDWARE_STEPS}. Wird auf die ersten ${MAX_HARDWARE_STEPS} Steps gekürzt — der Rest passt ` +
+      `nicht in ein Pattern.`
     );
     totalLength = MAX_HARDWARE_STEPS;
   }
@@ -127,11 +164,25 @@ async function handleMidiDrop(file, bank, slot) {
   try {
     const buf = new Uint8Array(await file.arrayBuffer());
     const midi = parseMidiFile(buf);
-    const stepsPerBeat = parseInt(els.resolution.value, 10);
+
+    let stepsPerBeat;
+    let autoNote = null;
+    if (els.resolution.value === "auto") {
+      stepsPerBeat = pickAutoResolution(midi);
+      autoNote = `Automatisch gewählt: ${resolutionLabel(stepsPerBeat)} (feiner hätte das Stück nicht in ${MAX_HARDWARE_STEPS} Steps gepasst).`;
+      if (stepsPerBeat < 1) {
+        autoNote += ` Achtung: bei so grobem Raster können ursprünglich nacheinander gespielte Noten auf ` +
+          `denselben Step fallen und dadurch als Akkord statt nacheinander klingen.`;
+      }
+    } else {
+      stepsPerBeat = parseFloat(els.resolution.value);
+    }
+
     const { steps, warnings } = quantizeMidiToSteps(midi, stepsPerBeat);
 
     state.pending.set(slotKey(bank, slot), { steps, sourceFileName: file.name, warnings });
-    log(`${bank}.${slot} <- ${file.name}: ${steps.length} Steps (Auflösung 1/${stepsPerBeat * 4}).`);
+    log(`${bank}.${slot} <- ${file.name}: ${steps.length} Steps (Auflösung ${resolutionLabel(stepsPerBeat)}).`);
+    if (autoNote) log(autoNote);
     warnings.forEach((w) => log(`${bank}.${slot}: ${w}`, true));
     renderGrid();
   } catch (err) {
@@ -217,6 +268,7 @@ function initBankTabs() {
   }
 }
 
+if (typeof window !== "undefined") {
 window.addEventListener("DOMContentLoaded", () => {
   els.grid = $("grid");
   els.bankTabs = $("bank-tabs");
@@ -244,3 +296,8 @@ window.addEventListener("DOMContentLoaded", () => {
     if (file) handleBaseFile(file);
   });
 });
+}
+
+if (typeof module !== "undefined") {
+  module.exports = { quantizeMidiToSteps, pickAutoResolution, stepsNeededAt, resolutionLabel, MAX_HARDWARE_STEPS };
+}

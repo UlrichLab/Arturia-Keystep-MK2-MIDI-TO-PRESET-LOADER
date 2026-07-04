@@ -37,10 +37,13 @@
   <label>
     Quantisierungs-Raster:
     <select id="resolution">
-      <option value="1">1/4</option>
-      <option value="2">1/8</option>
-      <option value="4" selected>1/16</option>
+      <option value="auto" selected>Automatisch (feinstmöglich für 64 Steps)</option>
       <option value="8">1/32</option>
+      <option value="4">1/16</option>
+      <option value="2">1/8</option>
+      <option value="1">1/4</option>
+      <option value="0.5">1/2</option>
+      <option value="0.25">ganze Note</option>
     </select>
   </label>
   <button id="download-btn" disabled>Angepasste .keystep2 herunterladen</button>
