@@ -65,15 +65,15 @@ def decode_steps(blob):
         record = blob[offset:offset + STEP_RECORD_SIZE]
         if is_empty_blob(record):
             break
-        notes_a = record[0:8]
-        notes_b = record[8:16]
+        pitches = record[0:8]
+        velocities = record[8:16]
         flags = record[16:24]
+        notes = [(p, v) for p, v in zip(pitches, velocities) if p != 0x80]
         steps.append({
-            "note_a": notes_a[0],
-            "note_a_slots": notes_a,
-            "note_b": notes_b[0],
-            "note_b_slots": notes_b,
-            "count_field": flags[0],
+            "notes": notes,
+            "pitches": pitches,
+            "velocities": velocities,
+            "flags": flags,
             "raw": record,
         })
         offset += STEP_RECORD_SIZE
@@ -89,7 +89,7 @@ def cmd_summary(args):
             continue
         steps = decode_steps(blob)
         print(f"bank {bank} slot {slot:2d}: ~{len(steps)} step(s) with data "
-              f"(first note byte: {steps[0]['note_a']:#04x})" if steps else
+              f"(first step: {steps[0]['notes']})" if steps else
               f"bank {bank} slot {slot:2d}: non-empty but no decodable steps")
 
 
@@ -120,8 +120,8 @@ def cmd_steps(args):
         sys.exit(f"no such slot: bank {args.bank} slot {args.slot}")
     steps = decode_steps(blobs[key])
     for i, step in enumerate(steps):
-        print(f"step {i:3d}: note_a={step['note_a']:#04x} note_b={step['note_b']:#04x} "
-              f"count_field={step['count_field']:#04x} raw={step['raw'].hex(' ')}")
+        notes = ", ".join(f"pitch={p:#04x} vel={v:#04x}" for p, v in step["notes"]) or "(empty step)"
+        print(f"step {i:3d}: {notes}")
 
 
 def main():
